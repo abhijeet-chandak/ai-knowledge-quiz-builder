@@ -1,0 +1,53 @@
+:root {
+  --bg: #f5f7fb;
+  --surface: #ffffff;
+  --surface2: #f3f6fc;
+  --border: #d9e1ef;
+  --text: #152238;
+  --muted: #5e6f8a;
+  --accent: #2f6fed;
+  --accent-dim: #2458bd;
+  --success: #1f9d55;
+  --danger: #d14343;
+  --radius: 12px;
+  font-family: 'DM Sans', system-ui, sans-serif;
+  line-height: 1.5;
+  color: var(--text);
+  background: var(--bg);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: radial-gradient(ellipse 120% 80% at 50% -20%, #edf3ff 0%, var(--bg) 55%);
+}
+
+#root {
+  min-height: 100vh;
+}
+
+a {
+  color: var(--accent);
+  text-decoration: none;
+}
+a:hover {
+  text-decoration: underline;
+}
+
+button {
+  font-family: inherit;
+  cursor: pointer;
+}
+
+input,
+textarea {
+  font-family: inherit;
+}
+
+.mono {
+  font-family: 'JetBrains Mono', monospace;
+}
