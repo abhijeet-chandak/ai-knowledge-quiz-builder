@@ -1,3 +1,5 @@
+import { IconCheck, IconX } from './icons.jsx';
+
 const LABELS = ['A', 'B', 'C', 'D'];
 
 export default function QuizResultCard({ item, index }) {
@@ -7,8 +9,9 @@ export default function QuizResultCard({ item, index }) {
       className={`result-card ${isCorrect ? 'result-card--correct' : 'result-card--wrong'}`}
     >
       <div className="result-card__top">
-        <span className="result-card__q badge">Question {index + 1}</span>
+        <span className="badge">Question {index + 1}</span>
         <span className={isCorrect ? 'tag success' : 'tag danger'}>
+          {isCorrect ? <IconCheck /> : <IconX />}
           {isCorrect ? 'Correct' : 'Incorrect'}
         </span>
       </div>
@@ -27,8 +30,8 @@ export default function QuizResultCard({ item, index }) {
             )}
           </div>
         </div>
-        <div className="result-answer-block">
-          <span className="result-answer-block__label">Correct</span>
+        <div className="result-answer-block result-answer-block--correct">
+          <span className="result-answer-block__label">Correct answer</span>
           <div className="result-answer-block__body">
             <span className="result-option-pill result-option-pill--correct mono">
               {correctAnswer}

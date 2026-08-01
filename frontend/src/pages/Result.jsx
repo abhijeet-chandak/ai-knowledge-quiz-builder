@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { useParams, useLocation, Link } from 'react-router-dom';
 import QuizResultCard from '../components/QuizResultCard.jsx';
 import { getQuizDetail, getErrorMessage } from '../services/api.js';
+import { IconArrowLeft } from '../components/icons.jsx';
 
 export default function Result() {
   const { quizId } = useParams();
@@ -60,11 +61,11 @@ export default function Result() {
 
   if (loading) {
     return (
-      <div className="page result-page result-page--state">
-        <Link to="/" className="result-page__back">
-          ← Back to home
-        </Link>
-        <p className="result-page__state-msg muted">Loading results…</p>
+      <div className="page result-page">
+        <div className="page-loader">
+          <span className="spinner spinner--dark spinner--lg" aria-hidden="true" />
+          Loading results…
+        </div>
       </div>
     );
   }
@@ -72,8 +73,9 @@ export default function Result() {
   if (error) {
     return (
       <div className="page result-page result-page--state">
-        <Link to="/" className="result-page__back">
-          ← Back to home
+        <Link to="/" className="back-link">
+          <IconArrowLeft />
+          Back to home
         </Link>
         <p className="result-page__state-msg form-error" role="alert">
           {error}
@@ -85,8 +87,9 @@ export default function Result() {
   if (!result?.breakdown) {
     return (
       <div className="page result-page result-page--state">
-        <Link to="/" className="result-page__back">
-          ← Back to home
+        <Link to="/" className="back-link">
+          <IconArrowLeft />
+          Back to home
         </Link>
         <p className="result-page__state-msg muted">No results. Take a quiz first.</p>
       </div>
@@ -95,15 +98,21 @@ export default function Result() {
 
   const { score, total, breakdown } = result;
   const correctCount = breakdown.filter((b) => b.isCorrect).length;
+  const wrongCount = total - correctCount;
 
-  let scoreTone = 'result-score-card--mid';
-  if (pct >= 80) scoreTone = 'result-score-card--high';
-  else if (pct < 50) scoreTone = 'result-score-card--low';
+  let scoreTone = '';
+  if (pct >= 80) scoreTone = 'result-summary--high';
+  else if (pct < 50) scoreTone = 'result-summary--low';
+
+  // SVG ring geometry: r=54 in a 120×120 viewBox
+  const RING_C = 2 * Math.PI * 54;
+  const ringOffset = RING_C * (1 - pct / 100);
 
   return (
     <div className="page result-page">
-      <Link to="/" className="result-page__back">
-        ← Back to home
+      <Link to="/" className="back-link">
+        <IconArrowLeft />
+        Back to home
       </Link>
 
       <header className="result-page__header">
@@ -118,20 +127,40 @@ export default function Result() {
         </p>
       </header>
 
-      <div className={`result-score-card ${scoreTone}`}>
-        <p className="result-score-card__eyebrow">Your score</p>
-        <p className="result-score-card__value" aria-live="polite">
-          <span className="result-score-card__num">{score}</span>
-          <span className="result-score-card__slash">/</span>
-          <span className="result-score-card__total">{total}</span>
-        </p>
-        <p className="result-score-card__meta">
-          <span className="result-score-card__pct">{pct}%</span>
-          <span className="result-score-card__sep">·</span>
-          <span>
-            {correctCount} correct out of {total}
-          </span>
-        </p>
+      <div className={`result-summary ${scoreTone}`} aria-live="polite">
+        <div className="score-ring" role="img" aria-label={`Score ${score} out of ${total} (${pct}%)`}>
+          <svg viewBox="0 0 120 120" aria-hidden="true">
+            <circle className="score-ring__track" cx="60" cy="60" r="54" />
+            <circle
+              className="score-ring__fill"
+              cx="60"
+              cy="60"
+              r="54"
+              strokeDasharray={RING_C}
+              strokeDashoffset={ringOffset}
+            />
+          </svg>
+          <div className="score-ring__center">
+            <span className="score-ring__pct">{pct}%</span>
+            <span className="score-ring__label">
+              {score}/{total}
+            </span>
+          </div>
+        </div>
+        <div className="result-stats">
+          <p className="result-stat">
+            <span className="result-stat__dot result-stat__dot--correct" />
+            <strong>{correctCount}</strong>&nbsp;correct
+          </p>
+          <p className="result-stat">
+            <span className="result-stat__dot result-stat__dot--wrong" />
+            <strong>{wrongCount}</strong>&nbsp;incorrect
+          </p>
+          <p className="result-stat">
+            <span className="result-stat__dot result-stat__dot--total" />
+            <strong>{total}</strong>&nbsp;questions total
+          </p>
+        </div>
       </div>
 
       <nav className="result-page__actions" aria-label="Next steps">

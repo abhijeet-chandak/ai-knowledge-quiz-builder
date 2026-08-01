@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { IconSparkles } from './icons.jsx';
 
 const examples = ['Photosynthesis', 'Neural Networks', 'Ancient Rome'];
 
@@ -23,36 +24,45 @@ export default function TopicForm({
       <label htmlFor="topic" className="topic-label">
         What should the quiz be about?
       </label>
-      <input
-        id="topic"
-        type="text"
-        value={topic}
-        onChange={(e) => setTopic(e.target.value)}
-        placeholder="e.g. Quantum computing"
-        disabled={loading}
-        className="topic-input"
-        autoComplete="off"
-      />
+      <div className="topic-form__row">
+        <input
+          id="topic"
+          type="text"
+          value={topic}
+          onChange={(e) => setTopic(e.target.value)}
+          placeholder="e.g. Quantum computing"
+          disabled={loading}
+          className="topic-input"
+          autoComplete="off"
+        />
+        <button
+          type="submit"
+          className="btn primary topic-submit"
+          disabled={loading || !topic.trim()}
+        >
+          {loading ? <span className="spinner" aria-hidden="true" /> : <IconSparkles />}
+          {loading ? 'Generating…' : 'Generate quiz'}
+        </button>
+      </div>
       <p className="topic-hint">
-        Try:{' '}
-        {examples.map((ex, i) => (
-          <span key={ex}>
-            {i > 0 ? ' · ' : null}
-            <button
-              type="button"
-              className="linkish"
-              onClick={() => setTopic(ex)}
-              disabled={loading}
-            >
-              {ex}
-            </button>
-          </span>
+        <span>Try:</span>
+        {examples.map((ex) => (
+          <button
+            key={ex}
+            type="button"
+            className="chip"
+            onClick={() => setTopic(ex)}
+            disabled={loading}
+          >
+            {ex}
+          </button>
         ))}
       </p>
-      {error && <p className="form-error">{error}</p>}
-      <button type="submit" className="btn primary" disabled={loading || !topic.trim()}>
-        {loading ? 'Generating quiz…' : 'Generate Quiz'}
-      </button>
+      {error && (
+        <p className="form-error" role="alert">
+          {error}
+        </p>
+      )}
     </form>
   );
 }

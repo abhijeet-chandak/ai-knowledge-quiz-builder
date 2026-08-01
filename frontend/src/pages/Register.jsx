@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link, Navigate, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext.jsx';
 import { getErrorMessage } from '../services/api.js';
+import { BrandMark, IconEye, IconEyeOff } from '../components/icons.jsx';
 
 export default function Register() {
   const { register, user } = useAuth();
@@ -10,6 +11,7 @@ export default function Register() {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
@@ -37,8 +39,10 @@ export default function Register() {
     <div className="page auth-page">
       <div className="auth-card">
         <header className="auth-card__header">
-          <p className="auth-eyebrow">Get started</p>
-          <h1 className="auth-title">Create account</h1>
+          <div className="auth-brand">
+            <BrandMark />
+          </div>
+          <h1 className="auth-title">Create your account</h1>
           <p className="auth-subtitle">
             One account for your quizzes and saved scores.
           </p>
@@ -83,18 +87,29 @@ export default function Register() {
             <label className="auth-label" htmlFor="reg-password">
               Password
             </label>
-            <input
-              id="reg-password"
-              type="password"
-              className="auth-input"
-              placeholder="At least 8 characters"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              autoComplete="new-password"
-              required
-              minLength={8}
-              aria-describedby="reg-password-hint"
-            />
+            <div className="pw-field">
+              <input
+                id="reg-password"
+                type={showPassword ? 'text' : 'password'}
+                className="auth-input"
+                placeholder="At least 8 characters"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                autoComplete="new-password"
+                required
+                minLength={8}
+                aria-describedby="reg-password-hint"
+              />
+              <button
+                type="button"
+                className="pw-toggle"
+                onClick={() => setShowPassword((s) => !s)}
+                aria-label={showPassword ? 'Hide password' : 'Show password'}
+                title={showPassword ? 'Hide password' : 'Show password'}
+              >
+                {showPassword ? <IconEyeOff /> : <IconEye />}
+              </button>
+            </div>
             <p id="reg-password-hint" className="auth-hint">
               Use at least 8 characters.
             </p>
@@ -111,6 +126,7 @@ export default function Register() {
             className="btn primary auth-submit"
             disabled={submitting}
           >
+            {submitting && <span className="spinner" aria-hidden="true" />}
             {submitting ? 'Creating account…' : 'Create account'}
           </button>
         </form>

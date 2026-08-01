@@ -1,3 +1,5 @@
+import { IconCheck } from './icons.jsx';
+
 const LABELS = ['A', 'B', 'C', 'D'];
 
 export default function QuestionCard({
@@ -26,26 +28,42 @@ export default function QuestionCard({
     >
       <header className="question-card__head">
         <span className="badge">{badge}</span>
+        {selected && (
+          <span className="q-answered">
+            <IconCheck />
+            Answered
+          </span>
+        )}
       </header>
       <h2 className="question-text">{question}</h2>
       <ul className="options-list">
         {LABELS.map((label) => {
           const text = options?.[label] ?? '';
           const id = `q-${questionId}-${label}`;
+          const isSelected = selected === label;
           return (
             <li key={label}>
-              <label className={`option-row ${selected === label ? 'selected' : ''}`} htmlFor={id}>
+              <label
+                className={`option-row ${isSelected ? 'selected' : ''}`}
+                htmlFor={id}
+              >
                 <input
                   type="radio"
                   id={id}
+                  className="visually-hidden"
                   name={`question-${questionId}`}
                   value={label}
-                  checked={selected === label}
+                  checked={isSelected}
                   onChange={() => onSelect(questionId, label)}
                   disabled={disabled}
                 />
-                <span className="option-label mono">{label}</span>
+                <span className="option-letter" aria-hidden="true">
+                  {label}
+                </span>
                 <span className="option-text">{text}</span>
+                <span className="option-check" aria-hidden="true">
+                  <IconCheck />
+                </span>
               </label>
             </li>
           );

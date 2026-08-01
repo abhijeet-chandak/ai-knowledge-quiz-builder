@@ -121,8 +121,6 @@ async function generateQuiz(topic, wikipediaContext) {
 
   let text;
   let lastError = null;
-  let selectedModel = null;
-  let selectedJsonMode = null;
   const maxWaitRounds = Number(process.env.GEMINI_QUOTA_RETRY_ROUNDS) || 4;
 
   done: for (let round = 0; round < maxWaitRounds; round++) {
@@ -145,8 +143,6 @@ async function generateQuiz(topic, wikipediaContext) {
         });
         const result = await model.generateContent(prompt);
         text = result.response.text();
-        selectedModel = selectedModelName;
-        selectedJsonMode = useJsonMime;
         break done;
       } catch (e) {
         lastError = e;

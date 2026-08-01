@@ -14,7 +14,7 @@ async function fetchContext(topic) {
   try {
     const searchUrl = `${WIKI_API}?action=query&format=json&list=search&srsearch=${encodeURIComponent(
       search
-    )}&srlimit=1&origin=*`;
+    )}&srlimit=1`;
     const { data: searchData } = await axios.get(searchUrl, {
       timeout: REQUEST_TIMEOUT_MS,
       headers: { 'User-Agent': USER_AGENT },
@@ -31,7 +31,7 @@ async function fetchContext(topic) {
     const title = hits[0].title;
     const extractUrl = `${WIKI_API}?action=query&format=json&prop=extracts&exintro&explaintext&titles=${encodeURIComponent(
       title
-    )}&origin=*`;
+    )}`;
     const { data: pageData } = await axios.get(extractUrl, {
       timeout: REQUEST_TIMEOUT_MS,
       headers: { 'User-Agent': USER_AGENT },

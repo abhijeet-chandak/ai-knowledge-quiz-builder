@@ -8,7 +8,10 @@ export default function ProtectedRoute() {
   if (loading) {
     return (
       <div className="page">
-        <p className="muted">Loading…</p>
+        <div className="page-loader">
+          <span className="spinner spinner--dark spinner--lg" aria-hidden="true" />
+          Loading…
+        </div>
       </div>
     );
   }

@@ -1,5 +1,5 @@
 import { useLayoutEffect } from 'react';
-import { Routes, Route, useLocation } from 'react-router-dom';
+import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import ProtectedRoute from './components/ProtectedRoute.jsx';
 import AuthenticatedLayout from './components/AuthenticatedLayout.jsx';
 import Home from './pages/Home.jsx';
@@ -42,6 +42,7 @@ export default function App() {
               <Route path="/history" element={<QuizHistory />} />
             </Route>
           </Route>
+          <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </main>
     </div>

@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { useParams, useNavigate, useLocation, Link } from 'react-router-dom';
 import QuestionCard from '../components/QuestionCard.jsx';
 import { submitQuiz, getQuizForTaking, getErrorMessage } from '../services/api.js';
+import { IconArrowLeft } from '../components/icons.jsx';
 
 const STORAGE_PREFIX = 'quiz_session_';
 
@@ -20,6 +21,10 @@ export default function Quiz() {
 
   useEffect(() => {
     let cancelled = false;
+    if (!Number.isInteger(id) || id <= 0) {
+      setLoadError('Invalid quiz link.');
+      return undefined;
+    }
     const fromState = location.state?.questions;
     const t = location.state?.topic || '';
     if (fromState?.length) {
@@ -89,8 +94,9 @@ export default function Quiz() {
   if (loadError) {
     return (
       <div className="page quiz-page quiz-page--state">
-        <Link to="/" className="quiz-page__back">
-          ← Back to home
+        <Link to="/" className="back-link">
+          <IconArrowLeft />
+          Back to home
         </Link>
         <p className="quiz-page__state-msg form-error" role="alert">
           {loadError}
@@ -101,11 +107,11 @@ export default function Quiz() {
 
   if (!questions.length) {
     return (
-      <div className="page quiz-page quiz-page--state">
-        <Link to="/" className="quiz-page__back">
-          ← Back to home
-        </Link>
-        <p className="quiz-page__state-msg muted">Loading quiz…</p>
+      <div className="page quiz-page">
+        <div className="page-loader">
+          <span className="spinner spinner--dark spinner--lg" aria-hidden="true" />
+          Loading quiz…
+        </div>
       </div>
     );
   }
@@ -115,20 +121,36 @@ export default function Quiz() {
   return (
     <div className="page quiz-page">
       <header className="quiz-page__header">
-        <Link to="/" className="quiz-page__back">
-          ← Back to home
+        <Link to="/" className="back-link">
+          <IconArrowLeft />
+          Back to home
         </Link>
         <div className="quiz-page__headline">
-          {topic ? (
-            <p className="quiz-page__topic" title={topic}>
-              {topic}
-            </p>
-          ) : null}
-          <h1 className="quiz-page__title">Quiz</h1>
+          <h1 className="quiz-page__title" title={topic || undefined}>
+            {topic || 'Quiz'}
+          </h1>
           <p className="quiz-page__lead">
-            All questions are on this page. Select one answer per question, then
-            submit.
+            {total} multiple-choice questions · pick one answer each, then
+            submit to see your score and explanations.
           </p>
+          <div className="quiz-progress-row">
+            <div
+              className="quiz-progress-track"
+              role="progressbar"
+              aria-valuemin={0}
+              aria-valuemax={total}
+              aria-valuenow={answeredCount}
+              aria-label="Questions answered"
+            >
+              <div
+                className="quiz-progress-fill"
+                style={{ width: `${total ? (answeredCount / total) * 100 : 0}%` }}
+              />
+            </div>
+            <span className="quiz-progress-count mono">
+              {answeredCount}/{total}
+            </span>
+          </div>
         </div>
       </header>
 

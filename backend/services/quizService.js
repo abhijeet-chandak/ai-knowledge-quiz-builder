@@ -5,6 +5,7 @@ const wikipediaService = require('./wikipediaService');
 
 const EXPECTED_QUESTION_COUNT = 5;
 const OPTION_LETTERS = ['A', 'B', 'C', 'D'];
+const MAX_TOPIC_LENGTH = 300;
 
 function assertQuizAccess(quiz, userId) {
   if (!quiz) {
@@ -42,6 +43,11 @@ async function generateAndPersistQuiz(userId, topic) {
   const cleanTopic = String(topic || '').trim();
   if (!cleanTopic) {
     const e = new Error('Topic is required');
+    e.code = 'VALIDATION';
+    throw e;
+  }
+  if (cleanTopic.length > MAX_TOPIC_LENGTH) {
+    const e = new Error(`Topic must be at most ${MAX_TOPIC_LENGTH} characters`);
     e.code = 'VALIDATION';
     throw e;
   }
@@ -87,23 +93,23 @@ async function submitQuiz(userId, quizId, answers) {
 
   const answerMap = answersToMap(answers);
   let score = 0;
+  const answerRows = [];
 
   for (const q of questions) {
     const selected = answerMap[q.id] || '';
     if (selected === q.correct) score += 1;
-
-    await quizModel.saveUserAnswer({
-      userId,
+    answerRows.push({
       questionId: q.id,
       selectedOption: selectedForStorage(selected),
     });
   }
 
-  await quizModel.saveQuizResult({
+  await quizModel.saveSubmission({
     userId,
     quizId,
     score,
     totalQuestions: questions.length,
+    answers: answerRows,
   });
 
   const breakdown = questions.map((q) => ({
@@ -144,13 +150,16 @@ async function getHistory(userId) {
 async function getQuizDetail(userId, quizId) {
   const quiz = await loadOwnedQuiz(quizId, userId);
 
-  const questions = await questionModel.findByQuizId(quizId, true);
+  const resultRow = await quizModel.findResultForQuiz(userId, quizId);
+  // Correct answers and explanations are only revealed once the quiz has been
+  // submitted — otherwise this endpoint would be a cheat sheet.
+  const submitted = !!resultRow;
+
+  const questions = await questionModel.findByQuizId(quizId, submitted);
   const userAnswers = await quizModel.getUserAnswersForQuiz(userId, quizId);
   const ansByQ = Object.fromEntries(
     userAnswers.map((ua) => [ua.question_id, ua.selected_option])
   );
-
-  const resultRow = await quizModel.findResultForQuiz(userId, quizId);
 
   return {
     quiz: {
@@ -161,15 +170,20 @@ async function getQuizDetail(userId, quizId) {
     score: resultRow?.score ?? null,
     total: resultRow?.total_questions ?? null,
     completedAt: resultRow?.created_at ?? null,
-    questions: questions.map((q) => ({
-      questionId: q.id,
-      question: q.question,
-      options: q.options,
-      correctAnswer: q.correct,
-      userAnswer: ansByQ[q.id] ?? null,
-      explanation: q.explanation,
-      isCorrect: ansByQ[q.id] === q.correct,
-    })),
+    questions: questions.map((q) => {
+      const base = {
+        questionId: q.id,
+        question: q.question,
+        options: q.options,
+        userAnswer: ansByQ[q.id] ?? null,
+      };
+      if (submitted) {
+        base.correctAnswer = q.correct;
+        base.explanation = q.explanation;
+        base.isCorrect = ansByQ[q.id] === q.correct;
+      }
+      return base;
+    }),
   };
 }
 

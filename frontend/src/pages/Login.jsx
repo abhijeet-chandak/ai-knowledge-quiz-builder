@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link, useNavigate, useLocation, Navigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext.jsx';
 import { getErrorMessage } from '../services/api.js';
+import { BrandMark, IconEye, IconEyeOff } from '../components/icons.jsx';
 
 export default function Login() {
   const { login, user } = useAuth();
@@ -11,6 +12,7 @@ export default function Login() {
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
@@ -34,10 +36,12 @@ export default function Login() {
     <div className="page auth-page">
       <div className="auth-card">
         <header className="auth-card__header">
-          <p className="auth-eyebrow">Welcome back</p>
-          <h1 className="auth-title">Sign in</h1>
+          <div className="auth-brand">
+            <BrandMark />
+          </div>
+          <h1 className="auth-title">Welcome back</h1>
           <p className="auth-subtitle">
-            Use your account to save quizzes and view your history.
+            Sign in to generate quizzes and track your scores.
           </p>
         </header>
 
@@ -64,16 +68,27 @@ export default function Login() {
             <label className="auth-label" htmlFor="password">
               Password
             </label>
-            <input
-              id="password"
-              type="password"
-              className="auth-input"
-              placeholder="••••••••"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              autoComplete="current-password"
-              required
-            />
+            <div className="pw-field">
+              <input
+                id="password"
+                type={showPassword ? 'text' : 'password'}
+                className="auth-input"
+                placeholder="••••••••"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                autoComplete="current-password"
+                required
+              />
+              <button
+                type="button"
+                className="pw-toggle"
+                onClick={() => setShowPassword((s) => !s)}
+                aria-label={showPassword ? 'Hide password' : 'Show password'}
+                title={showPassword ? 'Hide password' : 'Show password'}
+              >
+                {showPassword ? <IconEyeOff /> : <IconEye />}
+              </button>
+            </div>
           </div>
 
           {error && (
@@ -87,6 +102,7 @@ export default function Login() {
             className="btn primary auth-submit"
             disabled={submitting}
           >
+            {submitting && <span className="spinner" aria-hidden="true" />}
             {submitting ? 'Signing in…' : 'Sign in'}
           </button>
         </form>

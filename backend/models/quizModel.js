@@ -1,4 +1,4 @@
-const { query } = require('../config/db');
+const { query, transaction } = require('../config/db');
 
 async function createQuiz({ userId, topic, wikipediaContext }) {
   const result = await query(
@@ -17,6 +17,9 @@ async function findById(quizId) {
 }
 
 async function listHistoryForUser(userId, limit = 100) {
+  // LIMIT can't be a bound param in mysql2 prepared statements on all MySQL
+  // versions — sanitize to an integer and inline it.
+  const safeLimit = Math.min(500, Math.max(1, Number.parseInt(limit, 10) || 100));
   return query(
     `SELECT q.id, q.topic, q.created_at,
             r.score, r.total_questions, r.created_at AS completed_at
@@ -24,27 +27,32 @@ async function listHistoryForUser(userId, limit = 100) {
      LEFT JOIN quiz_results r ON r.quiz_id = q.id AND r.user_id = ?
      WHERE q.user_id = ?
      ORDER BY q.created_at DESC
-     LIMIT ?`,
-    [userId, userId, limit]
+     LIMIT ${safeLimit}`,
+    [userId, userId]
   );
 }
 
-async function saveQuizResult({ userId, quizId, score, totalQuestions }) {
-  await query(
-    `INSERT INTO quiz_results (user_id, quiz_id, score, total_questions)
-     VALUES (?, ?, ?, ?)
-     ON DUPLICATE KEY UPDATE score = VALUES(score), total_questions = VALUES(total_questions), created_at = CURRENT_TIMESTAMP`,
-    [userId, quizId, score, totalQuestions]
-  );
-}
-
-async function saveUserAnswer({ userId, questionId, selectedOption }) {
-  await query(
-    `INSERT INTO user_answers (user_id, question_id, selected_option)
-     VALUES (?, ?, ?)
-     ON DUPLICATE KEY UPDATE selected_option = VALUES(selected_option), created_at = CURRENT_TIMESTAMP`,
-    [userId, questionId, selectedOption]
-  );
+/**
+ * Persists all answers plus the result row atomically — either the whole
+ * submission lands or none of it does.
+ */
+async function saveSubmission({ userId, quizId, score, totalQuestions, answers }) {
+  await transaction(async (conn) => {
+    for (const a of answers) {
+      await conn.execute(
+        `INSERT INTO user_answers (user_id, question_id, selected_option)
+         VALUES (?, ?, ?)
+         ON DUPLICATE KEY UPDATE selected_option = VALUES(selected_option), created_at = CURRENT_TIMESTAMP`,
+        [userId, a.questionId, a.selectedOption]
+      );
+    }
+    await conn.execute(
+      `INSERT INTO quiz_results (user_id, quiz_id, score, total_questions)
+       VALUES (?, ?, ?, ?)
+       ON DUPLICATE KEY UPDATE score = VALUES(score), total_questions = VALUES(total_questions), created_at = CURRENT_TIMESTAMP`,
+      [userId, quizId, score, totalQuestions]
+    );
+  });
 }
 
 async function getUserAnswersForQuiz(userId, quizId) {
@@ -72,6 +80,5 @@ module.exports = {
   findResultForQuiz,
   getUserAnswersForQuiz,
   listHistoryForUser,
-  saveQuizResult,
-  saveUserAnswer,
+  saveSubmission,
 };

@@ -4,6 +4,10 @@ const jwt = require('jsonwebtoken');
 const SALT_ROUNDS = 10;
 const JWT_EXPIRES = process.env.JWT_EXPIRES_IN || '7d';
 
+// Compared against when the account doesn't exist, so login takes the same
+// time for unknown and known emails (prevents user enumeration via timing).
+const DUMMY_HASH = bcrypt.hashSync('timing-equalizer-placeholder', SALT_ROUNDS);
+
 function getJwtSecret() {
   const s = process.env.JWT_SECRET;
   if (!s || s.length < 16) {
@@ -19,8 +23,8 @@ async function hashPassword(plain) {
 }
 
 async function verifyPassword(plain, hash) {
-  if (!hash) return false;
-  return bcrypt.compare(plain, hash);
+  const ok = await bcrypt.compare(plain, hash || DUMMY_HASH);
+  return hash ? ok : false;
 }
 
 function signToken(userId) {
